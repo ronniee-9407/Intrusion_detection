@@ -1,0 +1,155 @@
+<header>
+    <div class="mainHeader">
+        <div class="paddingHeaderTop">
+            <img src="../../assets/icons/logo.png" alt="logo" id="comapny">
+            <h1>Intrusion Detection</h1>
+            <ul>
+                <button *ngIf="currView == 'Live'" class="navButtons active" (click)="live()">Live View</button>
+                <button *ngIf="currView != 'Live'" class="navButtons" (click)="live()">Live View</button>
+                <button *ngIf="currView == 'ROI'" class="navButtons active" (click)="ROI()">ROI</button>
+                <button *ngIf="currView != 'ROI'" class="navButtons" (click)="ROI()">ROI</button>
+                <button *ngIf="currView == 'ReportHome' || currView == 'ReportData'" class="navButtons active" (click)="reportAnalysis()">Report Analysis</button>
+                <button *ngIf="currView != 'ReportHome' && currView != 'ReportData'" class="navButtons" (click)="reportAnalysis()">Report Analysis</button>
+            </ul>
+            <button type="button" id="logout" (click)="logout()">Logout</button>
+        </div>
+        
+    </div>
+</header>
+
+<body *ngIf="currView == 'Live'">
+    <div class="card shadow">
+        <div class="cardName">
+            <p class="shadow">Cam 1</p>
+        </div>
+        <img *ngIf="videoAvailable" id="cardContent" [src]="subscribed_video" alt="subscribed_video">
+        <img *ngIf="!videoAvailable" id="cardContentNotAvailable" src="../../assets/icons/404.jpg" alt="subscribed_video">
+        <div class="status">
+            <p>Camera Status</p>
+            <img *ngIf="cam_status == 1" src="../../assets/icons/check.png" alt="check" id="check">
+            <img *ngIf="cam_status == 0" src="../../assets/icons/warning.png" alt="warning" id="warning">
+            <p>Database Status</p>
+            <img *ngIf="db_status == 1" src="../../assets/icons/check.png" alt="check" id="check">
+            <img *ngIf="db_status == 0" src="../../assets/icons/warning.png" alt="warning" id="warning">
+        </div>
+    </div>
+    
+
+    <div class="table shadow">
+        <table id="table">
+            <thead>
+                <th><i class="fa-solid fa-clock"></i>Date/Time</th>
+                <th>Intrusions</th>
+                <th>Image ID</th>
+            </thead>
+            <tbody *ngIf="tableDataAvailable">
+                <tr *ngFor="let dataRow of liveViewArrayTable">
+                    <td *ngFor="let data of dataRow">
+                      {{data}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <img *ngIf="!tableDataAvailable" id="tableContentNotAvailable" src="../../assets/icons/table404.jpg" alt="notable">
+    </div>
+</body>
+
+
+<body [hidden]="currView != 'ROI'">
+    <img *ngIf="videoAvailable" [src]="subscribed_video" alt="video" id="roiVideo">
+    <img *ngIf="!videoAvailable" id="cardContentNotAvailableROI" src="../../assets/icons/404.jpg" alt="subscribed_video">
+    <div class="canvasGuide">
+        <div class="guide">
+            Click on the video stream to start marking the ROI
+        </div>
+        <div id="canvas-wrapper-roi">
+            <canvas style="pointer-events: auto;" id="canvas-roi"></canvas>
+        </div>
+    </div>
+
+    <div class="ROIButtons shadow">
+        <button class="btn btn-primary" (click)="drawSpotROI()">Add Spot</button>
+        <button *ngIf="deleteDisplay" class="btn btn-primary" (click)="removeSpot()">Remove Spot</button>
+        <button class="btn btn-primary" (click)="clearROI()">Clear ROI</button>
+        <button class="btn btn-primary" (click)="save()"><i class="fa fa-floppy-o" aria-hidden="true"></i>Save</button>
+        <div class="flex-row w-100">
+            <button class="btn btn-primary" (click)="loadDefault()">Load Default</button>
+            <button class="btn btn-primary" (click)="toggleRunDemoVidOn()">Demo Video</button>
+        </div>
+    </div>
+
+    <div *ngIf="demoVidToggled" id="modalDemo" (click)="toggleRunDemoVidOff()">
+        <div class="demoVidContainer shadow" (click)="$event.stopPropagation()">
+            <img [src]="demo_video" alt="demo vid" id="demoVid">
+        </div>
+    </div>
+</body>
+
+<body *ngIf="currView == 'ReportHome'">
+    <div id="datePick">
+        <div id="date">
+            <label for="start-date">Start Date: &nbsp;&nbsp;</label>
+            <input autocomplete="off" id="start-date"/>
+        </div>
+        
+        <div id="date">
+            <label for="end-date">End Date: &nbsp;&nbsp;</label>
+            <input autocomplete="off" id="end-date"/>
+        </div>
+    </div>
+
+    <div id="timePick">
+        <div id="time">
+            <label for="start-time">Start Time: &nbsp;&nbsp;</label>
+            <input style="width: 48%;" type="time" autocomplete="off" [(ngModel)]="startTime" id="start-time" value="start time"/>
+        </div>
+        
+        <div id="time">
+            <label for="end-time">End Time: &nbsp;&nbsp;</label>
+            <input style="width: 48%;" type="time" autocomplete="off" [(ngModel)]="endTime"  id="end-time"  value="end time"/>
+        </div>
+    </div>
+
+    <button id="searchButton" class="btn btn-primary" (click)="searchDateTime()">Search</button>
+</body>
+
+<body *ngIf="currView == 'ReportData'">
+    <div *ngIf="error" id="error">
+        <img src="../../assets/icons/warning.png" alt="error" id="warning2">
+        <h1>No Such ID Exists in the Database !</h1>
+    </div>
+    
+    <div *ngIf="!error" class="dataTableContainer">
+      <table datatable [dtOptions]="dtOptions" id="table" *ngIf="!error && dataFromDB.length > 0" class="table table-striped table-hover table-bordered">
+          <thead>
+            <tr>
+              <th>Date/Time</th>
+              <th>Camera Name</th>
+              <th>Image ID</th>
+              <th>Intrusions</th>
+              <th>Show Image</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let dataRow of dataFromDB">
+              <td *ngFor="let data of dataRow">
+                {{data}}
+              </td>
+              <td (click)="clickRow(dataRow[0], dataRow[2])" style="color: rgb(109, 107, 216); cursor: pointer">Click to Show Image</td>
+            </tr>
+          </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="!error" class="graphContainer">
+        <canvas id="chart"></canvas>
+    </div>
+
+    <div *ngIf="modal" id="modal" (click)="backFromModal()">
+        <img [src]="imageDatatable" id="showImage" (click)="$event.stopPropagation()">
+    </div>
+
+    <button id="backFromSearch" class="btn btn-primary" (click)="reportAnalysis()">Back</button>
+</body>
+
+<footer *ngIf="currView != 'ReportData'">Deevia Software India PVT. LTD. © 2022</footer>

@@ -1,0 +1,8 @@
+<body>
+    <form ngNativeValidate #form>
+      <img src="../../assets/icons/logo.png" alt="logo" id="logo">
+      <input type="text" id="UserID" class="form-control" placeholder="User ID" required autofocus>
+      <input type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+      <input class="btn btn-lg btn-primary w-100" type="submit" value="Login" (click)="form.checkValidity()? login() : null"/>
+    </form>
+</body>
